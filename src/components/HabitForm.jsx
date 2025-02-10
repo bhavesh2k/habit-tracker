@@ -15,6 +15,7 @@ function HabitForm() {
         name: habit,
         type: type,
         createdAt: Timestamp.now(),
+        date: new Date().toISOString().split("T")[0], // Store date in YYYY-MM-DD format
       });
       setHabit(""); // Clear input after saving
       alert("Habit added successfully!");

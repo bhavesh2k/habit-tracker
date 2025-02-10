@@ -1,12 +1,28 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 
 function HabitList() {
   const [habits, setHabits] = useState([]);
+  const [selectedView, setSelectedView] = useState("daily"); // Default to daily
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]); // Today
 
   useEffect(() => {
-    const q = query(collection(db, "habits"), orderBy("createdAt", "desc"));
+    let q;
+    if (selectedView === "daily") {
+      q = query(collection(db, "habits"), where("date", "==", selectedDate), orderBy("createdAt", "desc"));
+    } else if (selectedView === "weekly") {
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Get Sunday
+      const startDate = weekStart.toISOString().split("T")[0];
+      q = query(collection(db, "habits"), where("date", ">=", startDate), orderBy("date"));
+    } else if (selectedView === "monthly") {
+      const monthStart = new Date();
+      monthStart.setDate(1); // First day of the month
+      const startDate = monthStart.toISOString().split("T")[0];
+      q = query(collection(db, "habits"), where("date", ">=", startDate), orderBy("date"));
+    }
+
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const habitArray = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -16,15 +32,23 @@ function HabitList() {
     });
 
     return () => unsubscribe(); // Cleanup listener on unmount
-  }, []);
+  }, [selectedView, selectedDate]);
 
   return (
     <div>
       <h2>Your Habits</h2>
+      <div>
+        <button onClick={() => setSelectedView("daily")}>Daily</button>
+        <button onClick={() => setSelectedView("weekly")}>Weekly</button>
+        <button onClick={() => setSelectedView("monthly")}>Monthly</button>
+      </div>
+      {selectedView === "daily" && (
+        <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
+      )}
       <ul>
         {habits.map((habit) => (
           <li key={habit.id}>
-            {habit.name} - {habit.type}
+            {habit.name} - {habit.type} - {habit.date}
           </li>
         ))}
       </ul>
