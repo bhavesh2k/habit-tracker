@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 
 function HabitList() {
   const [habits, setHabits] = useState([]);
@@ -46,6 +46,13 @@ function HabitList() {
     await updateDoc(habitRef, { completed: !currentStatus });
   };
 
+
+  const deleteHabit = async (habitId) => {
+    if (window.confirm("Are you sure you want to delete this habit?")) {
+      await deleteDoc(doc(db, "habits", habitId));
+    }
+  };
+
   return (
     <div>
       <h2>Your Habits</h2>
@@ -66,6 +73,9 @@ function HabitList() {
               onChange={() => toggleCompletion(habit.id, habit.completed)}
             />
             {habit.name} - {habit.type} - {habit.date}
+            <button onClick={() => deleteHabit(habit.id)} style={{ marginLeft: "10px", color: "red" }}>
+              ❌ Delete
+            </button>
           </li>
         ))}
       </ul>
