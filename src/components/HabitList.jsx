@@ -35,10 +35,11 @@ function HabitList() {
       return unsubscribe;
     };
   
-    const unsubscribe = fetchHabits(); // Fetch habits immediately on load
+    const unsubscribe = fetchHabits(); // Fetch habits immediately
   
-    return () => unsubscribe(); // Cleanup listener when component unmounts
-  }, [selectedView, selectedDate]);
+    return () => unsubscribe(); // Cleanup Firestore listener
+  }, [selectedView, selectedDate, habits]); // Add `habits` as a dependency
+  
   
 
   const toggleCompletion = async (habitId, currentStatus) => {
@@ -50,8 +51,12 @@ function HabitList() {
   const deleteHabit = async (habitId) => {
     if (window.confirm("Are you sure you want to delete this habit?")) {
       await deleteDoc(doc(db, "habits", habitId));
+      
+      // Immediately update local state to remove the habit
+      setHabits((prevHabits) => prevHabits.filter((habit) => habit.id !== habitId));
     }
   };
+  
 
   return (
     <div>
