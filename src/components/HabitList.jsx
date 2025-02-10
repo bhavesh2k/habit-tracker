@@ -8,31 +8,38 @@ function HabitList() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 
   useEffect(() => {
-    let q;
-    if (selectedView === "daily") {
-      q = query(collection(db, "habits"), where("date", "==", selectedDate), orderBy("createdAt", "desc"));
-    } else if (selectedView === "weekly") {
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-      const startDate = weekStart.toISOString().split("T")[0];
-      q = query(collection(db, "habits"), where("date", ">=", startDate), orderBy("date"));
-    } else if (selectedView === "monthly") {
-      const monthStart = new Date();
-      monthStart.setDate(1);
-      const startDate = monthStart.toISOString().split("T")[0];
-      q = query(collection(db, "habits"), where("date", ">=", startDate), orderBy("date"));
-    }
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const habitArray = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setHabits(habitArray);
-    });
-
-    return () => unsubscribe();
+    const fetchHabits = () => {
+      let q;
+      if (selectedView === "daily") {
+        q = query(collection(db, "habits"), where("date", "==", selectedDate), orderBy("createdAt", "desc"));
+      } else if (selectedView === "weekly") {
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Get Sunday
+        const startDate = weekStart.toISOString().split("T")[0];
+        q = query(collection(db, "habits"), where("date", ">=", startDate), orderBy("date"));
+      } else if (selectedView === "monthly") {
+        const monthStart = new Date();
+        monthStart.setDate(1); // First day of the month
+        const startDate = monthStart.toISOString().split("T")[0];
+        q = query(collection(db, "habits"), where("date", ">=", startDate), orderBy("date"));
+      }
+  
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const habitArray = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setHabits(habitArray);
+      });
+  
+      return unsubscribe;
+    };
+  
+    const unsubscribe = fetchHabits(); // Fetch habits immediately on load
+  
+    return () => unsubscribe(); // Cleanup listener when component unmounts
   }, [selectedView, selectedDate]);
+  
 
   const toggleCompletion = async (habitId, currentStatus) => {
     const habitRef = doc(db, "habits", habitId);
