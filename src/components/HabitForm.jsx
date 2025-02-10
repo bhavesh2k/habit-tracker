@@ -2,11 +2,11 @@ import { useState } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 
-const HabitForm = ({ onHabitAdded }) => {
+function HabitForm() {
   const [habit, setHabit] = useState("");
   const [type, setType] = useState("checkbox");
 
-  const addHabit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!habit) return;
 
@@ -16,30 +16,30 @@ const HabitForm = ({ onHabitAdded }) => {
         type: type,
         createdAt: Timestamp.now(),
       });
-      setHabit("");
-      onHabitAdded(); // Refresh the habit list after adding
+      setHabit(""); // Clear input after saving
+      alert("Habit added successfully!");
     } catch (error) {
       console.error("Error adding habit:", error);
+      alert("Failed to add habit.");
     }
   };
 
   return (
-    <form onSubmit={addHabit} className="flex gap-2 mb-4">
+    <form onSubmit={handleSubmit}>
       <input
         type="text"
+        placeholder="Enter habit..."
         value={habit}
         onChange={(e) => setHabit(e.target.value)}
-        placeholder="Enter habit name"
-        className="p-2 border rounded"
         required
       />
-      <select value={type} onChange={(e) => setType(e.target.value)} className="p-2 border rounded">
+      <select value={type} onChange={(e) => setType(e.target.value)}>
         <option value="checkbox">Checkbox</option>
-        <option value="measurable">Measurable (e.g., minutes, reps)</option>
+        <option value="measurable">Measurable</option>
       </select>
-      <button type="submit" className="p-2 bg-blue-500 text-white rounded">Add</button>
+      <button type="submit">Add Habit</button>
     </form>
   );
-};
+}
 
 export default HabitForm;
